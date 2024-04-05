@@ -55,55 +55,45 @@ Now the server has the address **192.168.100.1** on our host-only network.
 
 ### DHCP server
 
-- Install the dhcp server
+#### Install the dhcp server
 `sudo apt install isc-dhcp-server`
-- Configure isc-dhcp server
-`nano /etc/dhcp/dhcpd.conf`
+
+#### Configure isc-dhcp server
+```bash
+nano /etc/dhcp/dhcpd.conf
+
+# and add 
+subnet 192.168.100.0 netmask 255.255.255.0 {
+  range 192.168.100.10 192.168.100.40;
+  option routers 192.168.1.1;
+}
+```
     
-    ```bash
-    # nano /etc/dhcp/dhcpd.conf
-    subnet 192.168.100.0 netmask 255.255.255.0 {
-      range 192.168.100.10 192.168.100.40;
-      option routers 192.168.1.1;
-    }
-    ```
-    
-    `nano **/etc/default/isc-dhcp-server`** 
-    
-    ![Untitled](Writeup%20c9c7792e8e0f44f7aa62d28625bfadf3/Untitled.png)
+`nano /etc/default/isc-dhcp-server`
+To add the interface we want to use for DHCP (enp0s6) to the file
+![Add interface name in /etc/default/isc-dhcp-server](images/add-correct-interface-in-isc-dhcp-server.png)
     
 
-**Check configuration and installation**
-
+#### Check configuration and installation
+Display log (only lines with DHCP) and keep watching the file
 ```bash
 sudo tail -f /var/log/syslog | grep dhcp
 ```
 
-If it works, you should see something like that in the log (the client needs to be up to request an IP)
+I already setup the vm-client to check that the DHCP works.
+If it works, you should see something like that in the log (the vm-client needs to be up to request an IP)
 
-![Untitled](Writeup%20c9c7792e8e0f44f7aa62d28625bfadf3/Untitled%201.png)
+![The DHCP server logs - it works !](images/DHCP-server-logs.png)
 
-<aside>
-🌟 **To renew IP via cli**
-**To release current IP**
-`sudo dhclient -r` 
-**Obtain fresh IP address using DHCP on Linux**
-`sudo dhclient`
 
-</aside>
+#### Useful stuff
+**To renew IP address**
+👉🏽 To release current IP: `sudo dhclient -r` 
+👉🏽 Obtain fresh IP address** `sudo dhclient`
 
-<aside>
-🌟 **Interesting files to check for DHCP**
-Leases: `/var/lib/dhcp/dhcpd.leases`
+**To see which devices are served**
+👉🏽 `dhcp-lease-list` or in file: `/var/lib/dhcp/dhcpd.leases`
 
-</aside>
-
-<aside>
-🌟 **Interesting commands**
-
-`dhcp-lease-list`
-
-</aside>
 
 ### DNS server
 
@@ -130,6 +120,9 @@ The file `/etc/named.conf` include other files.
 
 We are interested by `/etc/named.conf.options`
 
+⚠️ 🚧 Work in progress 🚧
+*This section is not reliable ! I haven't really made it work yet...*
+
 ```bash
 acl internal-network {
 	192.168.100.0/24;
@@ -141,19 +134,16 @@ options {
 	  localhost; 
 	  internal-network;
   };
-  allow-transfer { localhost; };
-  forwarders { 
-	  8.8.8.8;  # google DNS
-	  8.8.4.4; # Cloudflare DNS
+  allow-transfer { 
+    localhost; 
   };
-        recursion yes;
-        dnssec-validation auto;
-        listen-on-v6 { any; };
+  recursion yes;
+  dnssec-validation auto;
+  listen-on-v6 { any; };
 	forwarders {
 	   8.8.8.8; - Google DNS
 	   8.8.4.4.; - Cloudflare DNS 
 	};
-
 }
 ```
 
@@ -161,9 +151,10 @@ options {
 - Fichier de zones /etc/named.rfc1912.zones
 - Fichier de clé /etc/named.root.key
 
+
 ### Internal site running GLPI (HTTP + MariaDB)
 
-I followed this tutorial and it worked like a charm
+I followed this tutorial and it worked like a charm.
 
 [Comment installer GLPI 10 sur Debian 12 ?](https://www.it-connect.fr/installation-pas-a-pas-de-glpi-10-sur-debian-12/)
 
@@ -184,7 +175,7 @@ Run `mysql_secure_installation`
 
 ❓ I said yes to everything except to the 2 questions below about only being able to connect from localhost, as I was doing everything from my machine in ssh, but maybe I should have said no ??
 
-![Untitled](Writeup%20c9c7792e8e0f44f7aa62d28625bfadf3/Untitled%202.png)
+![mysql-secure-installation questions where I said no](images/mysql-secure-installation.png)
 
 **Connection to mariadb**
 
@@ -228,10 +219,7 @@ mkdir /var/log/glpi && chown www-data /var/log/glpi
 
 … All info are in this [wonderful tuto](https://www.it-connect.fr/installation-pas-a-pas-de-glpi-10-sur-debian-12/) or the GLPI docs
 
-<aside>
-🌟 Name for the internal site: support.local-library.net
-
-</aside>
+🌟 **Name for the internal site: support.local-library.net**
 
 Then 
 
@@ -242,10 +230,8 @@ sudo a2enmod rewrite
 sudo systemctl restart apache2
 ```
 
-<aside>
-⚠️ I had to use **php8.1-fpm** because php8.2-fpm was not real based on what my server said when I tried to install it.
 
-</aside>
+⚠️ I had to use **php8.1-fpm** because php8.2-fpm was not real based on what my server said when I tried to install it.
 
 At this point the GLPI site is accessible from the IPs 192.168.100.1 or 10.211.55.7 or with the site name [support.local-library.net](http://support.local-library.net) if the file /etc/hosts has been modified like this (our DNS are not yet configured 😅)  
 
@@ -256,9 +242,9 @@ At this point the GLPI site is accessible from the IPs 192.168.100.1 or 10.211.5
 
 Then we can proceed to installation in the browser.
 
-We finish on this  🎉🎉🎉 
+GLPI over  🎉🎉🎉 
 
-![Untitled](Writeup%20c9c7792e8e0f44f7aa62d28625bfadf3/Untitled%203.png)
+![GLPI-over](images/GLPI-over.png)
 
 ### Backup
 
@@ -339,6 +325,8 @@ chmod +x backup.sh
 # or
 @weekly <command>
 ```
+
+I need to finish this, see todo section...
 
 ## vm-client
 
