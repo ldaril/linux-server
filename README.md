@@ -219,7 +219,35 @@ mkdir /var/log/glpi && chown www-data /var/log/glpi
 
 … All info are in this [wonderful tuto](https://www.it-connect.fr/installation-pas-a-pas-de-glpi-10-sur-debian-12/) or the GLPI docs
 
-🌟 **Name for the internal site: support.local-library.net**
+🌟 **The domain name for our internal site: support.local-library.net**  
+The configuration file is: /etc/apache2/sites-available/support.local-library.net.conf with the following configuration:
+```
+<VirtualHost *:80>
+    ServerName support.local-library.net
+
+    DocumentRoot /var/www/glpi/public
+
+    # If you want to place GLPI in a subfolder of your site (e.g. your virtual host is serving multiple applications),
+    # you can use an Alias directive. If you do this, the DocumentRoot directive MUST NOT target the GLPI directory itself.
+    # Alias "/glpi" "/var/www/glpi/public"
+
+    <Directory /var/www/glpi/public>
+        Require all granted
+
+        RewriteEngine On
+
+        # Redirect all requests to GLPI router, unless file exists.
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteRule ^(.*)$ index.php [QSA,L]
+    </Directory>
+
+    <FilesMatch \.php$>
+    	SetHandler "proxy:unix:/run/php/php8.1-fpm.sock|fcgi://localhost/"
+    </FilesMatch>
+
+</VirtualHost>
+```
+
 
 Then 
 
