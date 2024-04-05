@@ -87,9 +87,9 @@ If it works, you should see something like that in the log (the vm-client needs 
 
 
 #### Useful stuff
-**To renew IP address**
-👉🏽 To release current IP: `sudo dhclient -r` 
-👉🏽 Obtain fresh IP address** `sudo dhclient`
+**To renew IP address**   
+👉🏽 To release current IP: `sudo dhclient -r`  
+👉🏽 Obtain fresh IP address** `sudo dhclient`.  
 
 **To see which devices are served**
 👉🏽 `dhcp-lease-list` or in file: `/var/lib/dhcp/dhcpd.leases`
@@ -236,8 +236,8 @@ sudo systemctl restart apache2
 At this point the GLPI site is accessible from the IPs 192.168.100.1 or 10.211.55.7 or with the site name [support.local-library.net](http://support.local-library.net) if the file /etc/hosts has been modified like this (our DNS are not yet configured 😅)  
 
 ```bash
-192.168.100.1 [support.local-library.net](http://support.local-library.net)
-10.211.55.7   [support.local-library.net](http://support.local-library.net)
+192.168.100.1 support.local-library.net
+10.211.55.7   support.local-library.net
 ```
 
 Then we can proceed to installation in the browser.
